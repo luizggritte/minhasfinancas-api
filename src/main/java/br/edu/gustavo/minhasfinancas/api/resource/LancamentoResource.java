@@ -27,21 +27,27 @@ public class LancamentoResource {
 
     @GetMapping
     public ResponseEntity buscar(
-            @RequestParam(value = "descricao", required = false) String descricao,
-            @RequestParam(value = "mes", required = false) Integer mes,
             @RequestParam(value = "ano", required = false) Integer ano,
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "descricao", required = false) String descricao,
+            @RequestParam(value = "tipo", required = false) TipoLancamento tipo,
+            @RequestParam(value = "status", required = false) StatusLancamento status,
             @RequestParam("usuario") Long idUsuario
     ) {
-        Lancamento lancamentoFiltro = new Lancamento();
-
-        lancamentoFiltro.setDescricao(descricao);
-        lancamentoFiltro.setMes(mes);
-        lancamentoFiltro.setAno(ano);
+        Lancamento lancamentoFiltro = Lancamento.builder()
+                .descricao(descricao)
+                .ano(ano)
+                .mes(mes)
+                .tipo(tipo)
+                .status(status)
+                .build();
 
         Optional<Usuario> usuario = usuarioService.obterPorId(idUsuario);
 
         if (usuario.isEmpty()) {
-            return ResponseEntity.badRequest().body("Não foi possível realizar a consulta. Usuario não encontrado para o Id informado");
+            return ResponseEntity
+                    .badRequest()
+                    .body("Não foi possível realizar a consulta. Usuario não encontrado para o Id informado");
         } else {
             lancamentoFiltro.setUsuario(usuario.get());
         }
@@ -51,10 +57,17 @@ public class LancamentoResource {
         return ResponseEntity.ok(lancamentos);
     }
 
+    @GetMapping("{id}")
+    public ResponseEntity buscarPorId(@PathVariable("id") Long id) {
+        return service.obterPorId(id)
+                .map(lancamento -> new ResponseEntity(converterLancamentoParaLancamentoDTO(lancamento), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
+    }
+
     @PostMapping
     public ResponseEntity salvar(@RequestBody LancamentoDTO dto) {
         try {
-            Lancamento entidade = converter(dto);
+            Lancamento entidade = converterLancamentoDTOParaLancamento(dto);
 
             entidade = service.salvar(entidade);
 
@@ -68,7 +81,7 @@ public class LancamentoResource {
     public ResponseEntity atualizar(@PathVariable("id") Long id, @RequestBody LancamentoDTO dto) {
         return service.obterPorId(id).map(entidade -> {
             try {
-                Lancamento lancamento = converter(dto);
+                Lancamento lancamento = converterLancamentoDTOParaLancamento(dto);
 
                 lancamento.setId(entidade.getId());
 
@@ -95,7 +108,9 @@ public class LancamentoResource {
 
                 return ResponseEntity.ok(entidade);
             } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body("Não foi possível atualizar o status do lançamento, envie um status válido");
+                return ResponseEntity
+                        .badRequest()
+                        .body("Não foi possível atualizar o status do lançamento, envie um status válido");
             } catch (RegraNegocioException e) {
                 return ResponseEntity.badRequest().body(e.getMessage());
             }
@@ -113,7 +128,20 @@ public class LancamentoResource {
         );
     }
 
-    private Lancamento converter(LancamentoDTO dto) {
+    private LancamentoDTO converterLancamentoParaLancamentoDTO(Lancamento lancamento) {
+        return LancamentoDTO.builder()
+                .id(lancamento.getId())
+                .descricao(lancamento.getDescricao())
+                .mes(lancamento.getMes())
+                .ano(lancamento.getAno())
+                .valor(lancamento.getValor())
+                .status(lancamento.getStatus().name())
+                .tipo(lancamento.getTipo().name())
+                .usuario(lancamento.getUsuario().getId())
+                .build();
+    }
+
+    private Lancamento converterLancamentoDTOParaLancamento(LancamentoDTO dto) {
         Lancamento lancamento = new Lancamento();
 
         lancamento.setId(dto.getId());

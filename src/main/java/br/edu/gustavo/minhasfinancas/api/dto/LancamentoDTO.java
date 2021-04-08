@@ -1,12 +1,13 @@
 package br.edu.gustavo.minhasfinancas.api.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LancamentoDTO {
 
     private Long id;

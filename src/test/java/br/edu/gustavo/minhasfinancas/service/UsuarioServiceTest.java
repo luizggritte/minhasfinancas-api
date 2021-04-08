@@ -6,7 +6,6 @@ import br.edu.gustavo.minhasfinancas.model.entity.Usuario;
 import br.edu.gustavo.minhasfinancas.model.repository.UsuarioRepository;
 import br.edu.gustavo.minhasfinancas.service.impl.UsuarioServiceImpl;
 import static org.assertj.core.api.Assertions.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
